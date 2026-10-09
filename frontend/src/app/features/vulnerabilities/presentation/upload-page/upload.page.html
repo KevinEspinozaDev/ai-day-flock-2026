@@ -1,0 +1,107 @@
+<header class="page-header">
+  <div>
+    <h1>Subir Excel</h1>
+    <p>Cargá el reporte de vulnerabilidades y obtené el resumen priorizado por severidad e impacto.</p>
+  </div>
+  <a mat-stroked-button href="/samples/vulnerabilidades-ejemplo.xlsx" download>
+    <mat-icon>download</mat-icon>
+    Descargar Excel de ejemplo
+  </a>
+</header>
+
+<section
+  class="dropzone"
+  [class.dropzone--active]="dragging()"
+  (dragover)="onDragOver($event)"
+  (dragleave)="dragging.set(false)"
+  (drop)="onDrop($event)"
+>
+  <mat-icon class="dropzone__icon">upload_file</mat-icon>
+  <p class="dropzone__title">Arrastrá el archivo acá</p>
+  <p class="dropzone__hint">o</p>
+  <button mat-flat-button type="button" (click)="fileInput.click()" [disabled]="processing()">
+    Elegir archivo
+  </button>
+  <input #fileInput type="file" hidden [accept]="accept" (change)="onFileInput($event)" />
+  <p class="dropzone__formats">
+    Formatos: {{ allowedExtensions }} · Máximo {{ maxSizeMb }} MB
+  </p>
+</section>
+
+@if (processing()) {
+  <mat-progress-bar mode="indeterminate" />
+  <p class="status">Procesando {{ selectedFile()?.name }}…</p>
+}
+
+@if (errors().length) {
+  <section class="alert alert--error" role="alert">
+    <mat-icon>error</mat-icon>
+    <div>
+      <strong>No se pudo importar {{ selectedFile()?.name }}</strong>
+      <ul>
+        @for (error of errors(); track $index) {
+          <li>{{ error }}</li>
+        }
+      </ul>
+    </div>
+  </section>
+}
+
+@if (result(); as report) {
+  <section class="alert alert--success" role="status">
+    <mat-icon>check_circle</mat-icon>
+    <div class="alert__body">
+      <strong>{{ report.fileName }} importado</strong>
+      <span>
+        {{ report.vulnerabilities.length | number }} vulnerabilidades leídas de la hoja “{{ report.sheetName }}”.
+        @if (report.issues.length) {
+          {{ report.issues.length }} observaciones.
+        }
+      </span>
+    </div>
+    <button mat-flat-button type="button" (click)="goToDashboard()">
+      Ver dashboard
+      <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+    </button>
+  </section>
+
+  @if (report.issues.length) {
+    <mat-accordion>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon class="warn-icon">warning</mat-icon>
+            Observaciones por fila ({{ report.issues.length }})
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <ul class="issues">
+          @for (issue of report.issues; track $index) {
+            <li><strong>Fila {{ issue.row }}:</strong> {{ issue.message }}</li>
+          }
+        </ul>
+      </mat-expansion-panel>
+    </mat-accordion>
+  }
+}
+
+<mat-card appearance="outlined" class="columns">
+  <mat-card-header>
+    <mat-card-title>Columnas esperadas</mat-card-title>
+    <mat-card-subtitle>La primera fila de la primera hoja debe tener los encabezados. Se aceptan en español o inglés.</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <ul class="columns__list">
+      @for (column of columns; track column.name) {
+        <li>
+          <span class="columns__name">
+            {{ column.name }}
+            @if (column.required) {
+              <span class="columns__required">obligatoria</span>
+            }
+          </span>
+          <span class="columns__hint">{{ column.hint }}</span>
+        </li>
+      }
+    </ul>
+  </mat-card-content>
+</mat-card>

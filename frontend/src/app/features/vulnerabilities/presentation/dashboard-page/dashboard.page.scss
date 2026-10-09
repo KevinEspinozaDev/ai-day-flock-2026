@@ -1,0 +1,159 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-label-large);
+  }
+
+  &__value {
+    font: var(--mat-sys-display-small);
+    font-variant-numeric: tabular-nums;
+    color: var(--mat-sys-on-surface);
+  }
+
+  &__detail {
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-body-small);
+  }
+}
+
+.charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 16px;
+
+  mat-card-content {
+    padding-top: 12px;
+  }
+}
+
+.dot {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.ranking__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.ranking__search {
+  min-width: 240px;
+  flex: 0 1 320px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 960px;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.mono {
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  font-size: 12px;
+}
+
+.title-cell {
+  max-width: 320px;
+
+  .muted {
+    display: block;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-weight: 500;
+
+  &::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    background: var(--badge-color);
+  }
+}
+
+.severity {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.flags mat-icon {
+  margin-right: 4px;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.empty-row {
+  padding: 24px;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 64px 16px;
+  text-align: center;
+
+  &__icon {
+    font-size: 56px;
+    width: 56px;
+    height: 56px;
+    color: var(--mat-sys-primary);
+  }
+
+  h1 {
+    margin: 0;
+    font: var(--mat-sys-headline-small);
+  }
+
+  p {
+    margin: 0 0 12px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}

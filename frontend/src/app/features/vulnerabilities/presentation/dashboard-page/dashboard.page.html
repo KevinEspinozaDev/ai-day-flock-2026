@@ -1,0 +1,211 @@
+@if (summary(); as s) {
+  <header class="page-header">
+    <div>
+      <h1>Dashboard</h1>
+      <p>
+        <mat-icon inline>description</mat-icon>
+        {{ report()!.fileName }} · importado {{ report()!.importedAt | date: 'dd/MM/yyyy HH:mm' }}
+      </p>
+    </div>
+    <a mat-stroked-button routerLink="/upload">
+      <mat-icon>upload_file</mat-icon>
+      Subir otro Excel
+    </a>
+  </header>
+
+  <section class="kpis" aria-label="Indicadores principales">
+    <mat-card appearance="outlined" class="kpi">
+      <span class="kpi__label">Vulnerabilidades activas</span>
+      <span class="kpi__value">{{ s.active | number }}</span>
+      <span class="kpi__detail">de {{ s.total | number }} totales · {{ s.closed | number }} cerradas o aceptadas</span>
+    </mat-card>
+    <mat-card appearance="outlined" class="kpi">
+      <span class="kpi__label">
+        <span class="dot" [style.background]="priorityColors['P1']"></span>
+        Prioridad P1 · Inmediata
+      </span>
+      <span class="kpi__value">{{ s.p1 | number }}</span>
+      <span class="kpi__detail">puntaje de riesgo ≥ 90</span>
+    </mat-card>
+    <mat-card appearance="outlined" class="kpi">
+      <span class="kpi__label">
+        <span class="dot" [style.background]="severityColors['CRITICAL']"></span>
+        Severidad crítica
+      </span>
+      <span class="kpi__value">{{ s.criticalActive | number }}</span>
+      <span class="kpi__detail">CVSS promedio {{ s.averageCvss ?? '—' }}</span>
+    </mat-card>
+    <mat-card appearance="outlined" class="kpi">
+      <span class="kpi__label">
+        <mat-icon inline>public</mat-icon>
+        Expuestas con exploit
+      </span>
+      <span class="kpi__value">{{ s.exposedWithExploit | number }}</span>
+      <span class="kpi__detail">expuestas a Internet y con exploit público</span>
+    </mat-card>
+  </section>
+
+  <section class="charts">
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Por severidad</mat-card-title>
+        <mat-card-subtitle>Vulnerabilidades activas</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @if (severityChart(); as config) {
+          <app-chart [config]="config" ariaLabel="Vulnerabilidades activas por severidad" />
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Por prioridad</mat-card-title>
+        <mat-card-subtitle>Severidad × impacto del activo × exploit × exposición</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @if (priorityChart(); as config) {
+          <app-chart [config]="config" ariaLabel="Vulnerabilidades activas por prioridad" />
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Severidad según impacto</mat-card-title>
+        <mat-card-subtitle>Distribución por criticidad del activo afectado</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @if (impactChart(); as config) {
+          <app-chart [config]="config" ariaLabel="Severidad por criticidad del activo" />
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Activos más expuestos</mat-card-title>
+        <mat-card-subtitle>Top {{ s.topAssets.length }} por riesgo acumulado</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @if (assetsChart(); as config) {
+          <app-chart [config]="config" ariaLabel="Activos con mayor riesgo acumulado" />
+        }
+      </mat-card-content>
+    </mat-card>
+  </section>
+
+  <mat-card appearance="outlined" class="ranking">
+    <mat-card-header>
+      <mat-card-title>Ranking priorizado</mat-card-title>
+      <mat-card-subtitle>Qué atender primero: mayor puntaje de riesgo arriba</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="ranking__filters">
+        <mat-button-toggle-group
+          hideSingleSelectionIndicator
+          [value]="priorityFilter()"
+          (change)="priorityFilter.set($event.value)"
+          aria-label="Filtrar por prioridad"
+        >
+          <mat-button-toggle value="ALL">Todas</mat-button-toggle>
+          @for (p of priorityOrder; track p) {
+            <mat-button-toggle [value]="p">{{ p }} ({{ s.byPriority[p] }})</mat-button-toggle>
+          }
+        </mat-button-toggle-group>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="ranking__search">
+          <mat-icon matPrefix>search</mat-icon>
+          <mat-label>Buscar</mat-label>
+          <input matInput placeholder="ID, título, CVE, activo…" (input)="onSearch($event)" />
+        </mat-form-field>
+      </div>
+
+      <div class="table-wrapper">
+        <table mat-table [dataSource]="dataSource" matSort>
+          <ng-container matColumnDef="rank">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>#</th>
+            <td mat-cell *matCellDef="let v">{{ v.rank }}</td>
+          </ng-container>
+          <ng-container matColumnDef="priority">
+            <th mat-header-cell *matHeaderCellDef>Prioridad</th>
+            <td mat-cell *matCellDef="let v">
+              <span class="badge" [style.--badge-color]="priorityColors[v.priority]">{{ priorityLabels[v.priority] }}</span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="score">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Riesgo</th>
+            <td mat-cell *matCellDef="let v" class="num">{{ v.score }}</td>
+          </ng-container>
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
+            <td mat-cell *matCellDef="let v" class="mono">{{ v.id }}</td>
+          </ng-container>
+          <ng-container matColumnDef="title">
+            <th mat-header-cell *matHeaderCellDef>Vulnerabilidad</th>
+            <td mat-cell *matCellDef="let v" class="title-cell">
+              {{ v.title }}
+              @if (v.cve) {
+                <span class="muted mono">{{ v.cve }}</span>
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="severity">
+            <th mat-header-cell *matHeaderCellDef>Severidad</th>
+            <td mat-cell *matCellDef="let v">
+              <span class="severity">
+                <span class="dot" [style.background]="severityColors[v.severity]"></span>
+                {{ severityLabels[v.severity] }}
+              </span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="cvss">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>CVSS</th>
+            <td mat-cell *matCellDef="let v" class="num">{{ v.cvss ?? '—' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="asset">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Activo</th>
+            <td mat-cell *matCellDef="let v">{{ v.asset }}</td>
+          </ng-container>
+          <ng-container matColumnDef="assetCriticality">
+            <th mat-header-cell *matHeaderCellDef>Criticidad</th>
+            <td mat-cell *matCellDef="let v">{{ criticalityLabels[v.assetCriticality] }}</td>
+          </ng-container>
+          <ng-container matColumnDef="flags">
+            <th mat-header-cell *matHeaderCellDef>Contexto</th>
+            <td mat-cell *matCellDef="let v" class="flags">
+              @if (v.internetExposed) {
+                <mat-icon matTooltip="Expuesto a Internet" aria-label="Expuesto a Internet">public</mat-icon>
+              }
+              @if (v.exploitAvailable) {
+                <mat-icon matTooltip="Exploit disponible" aria-label="Exploit disponible">bug_report</mat-icon>
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let v">{{ statusLabels[v.status] }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell empty-row" [attr.colspan]="displayedColumns.length">
+              No hay vulnerabilidades que coincidan con el filtro.
+            </td>
+          </tr>
+        </table>
+      </div>
+      <mat-paginator [pageSizeOptions]="[10, 25, 50]" pageSize="10" showFirstLastButtons aria-label="Paginación" />
+    </mat-card-content>
+  </mat-card>
+} @else {
+  <section class="empty">
+    <mat-icon class="empty__icon">insert_chart</mat-icon>
+    <h1>Todavía no hay datos</h1>
+    <p>Subí el Excel de vulnerabilidades para ver el resumen priorizado.</p>
+    <a mat-flat-button routerLink="/upload">
+      <mat-icon>upload_file</mat-icon>
+      Subir Excel
+    </a>
+  </section>
+}

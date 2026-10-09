@@ -1,0 +1,62 @@
+<main class="login">
+  <mat-card class="login__card" appearance="outlined">
+    <mat-card-header>
+      <mat-icon mat-card-avatar class="login__logo">shield_lock</mat-icon>
+      <mat-card-title>VulnPrio</mat-card-title>
+      <mat-card-subtitle>Priorización de vulnerabilidades</mat-card-subtitle>
+    </mat-card-header>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <mat-card-content class="login__content">
+        <mat-form-field appearance="outline">
+          <mat-label>Usuario</mat-label>
+          <input matInput formControlName="username" autocomplete="username" autofocus />
+          <mat-icon matPrefix>person</mat-icon>
+          @if (form.controls.username.hasError('required')) {
+            <mat-error>El usuario es obligatorio</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Contraseña</mat-label>
+          <input
+            matInput
+            formControlName="password"
+            autocomplete="current-password"
+            [type]="hidePassword() ? 'password' : 'text'"
+          />
+          <mat-icon matPrefix>lock</mat-icon>
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="hidePassword.set(!hidePassword())"
+            [attr.aria-label]="hidePassword() ? 'Mostrar contraseña' : 'Ocultar contraseña'"
+          >
+            <mat-icon>{{ hidePassword() ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+          @if (form.controls.password.hasError('required')) {
+            <mat-error>La contraseña es obligatoria</mat-error>
+          }
+        </mat-form-field>
+
+        @if (errorMessage(); as message) {
+          <p class="login__error" role="alert">
+            <mat-icon>error</mat-icon>
+            {{ message }}
+          </p>
+        }
+      </mat-card-content>
+
+      <mat-card-actions>
+        <button mat-flat-button class="login__submit" type="submit" [disabled]="loading()">
+          @if (loading()) {
+            <mat-spinner diameter="20" />
+          } @else {
+            Ingresar
+          }
+        </button>
+      </mat-card-actions>
+    </form>
+  </mat-card>
+</main>
