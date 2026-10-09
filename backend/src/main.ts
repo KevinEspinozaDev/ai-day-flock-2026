@@ -40,6 +40,7 @@ async function bootstrap(): Promise<void> {
 
   const server = app.listen(env.PORT, () => {
     console.log(`API escuchando en el puerto ${env.PORT}`);
+    console.log(`CORS habilitado para: ${env.CORS_ORIGIN.join(', ')}`);
   });
 
   const shutdown = () => {

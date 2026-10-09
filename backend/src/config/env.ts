@@ -15,7 +15,9 @@ const envSchema = z.object({
     .transform((value) =>
       value
         .split(',')
-        .map((origin) => origin.trim())
+        // Tolerate spaces, quotes and trailing slashes: the browser sends
+        // the Origin header without them, and CORS needs an exact match.
+        .map((origin) => origin.trim().replace(/^["']|["']$/g, '').replace(/\/+$/, ''))
         .filter(Boolean)
     ),
   SEED_ADMIN_USERNAME: z.string().optional(),
