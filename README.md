@@ -8,6 +8,32 @@ App interna para **priorizar vulnerabilidades**: subís el Excel del escaneo y t
 | **Backend** | Node + Express 5 + TypeScript, JWT (`jsonwebtoken`), bcrypt, Postgres |
 | **Deploy** | Railway: 3 servicios (frontend, backend, Postgres) |
 
+## Probar la app
+
+| | URL |
+|---|---|
+| **App (frontend)** | https://frontend-vulnprio-production.up.railway.app |
+| **API (backend)** | https://ai-day-flock-2026-production.up.railway.app · estado: [`/health`](https://ai-day-flock-2026-production.up.railway.app/health) |
+
+> Las credenciales de acceso se comparten por un canal privado; no se publican en el repo.
+
+### Guía rápida para testers
+
+1. Entrar a la [app](https://frontend-vulnprio-production.up.railway.app) e iniciar sesión.
+2. Ir a **Subir Excel** y cargar [`assets/vulnerabilidades-ejemplo.xlsx`](assets/vulnerabilidades-ejemplo.xlsx) (también se descarga desde la pantalla con *Descargar Excel de ejemplo*).
+3. Ir a **Dashboard** y revisar los indicadores, los gráficos y el ranking priorizado (filtros por prioridad y búsqueda).
+4. Probar las validaciones con los archivos de [`assets/pruebas/`](assets/pruebas/):
+
+| Archivo | Resultado esperado |
+|---|---|
+| `excel-sin-columnas-requeridas.xlsx` | Rechazo: *"Faltan columnas obligatorias…"* |
+| `archivo-de-texto.txt` | Rechazo: *"Formato no permitido (.txt)…"* (en el selector, elegir "Todos los archivos", o arrastrarlo) |
+| Una copia del `.txt` renombrada a `.xlsx` | Rechazo: *"El contenido no corresponde a un archivo Excel/ODS válido…"* |
+
+5. Abrir el menú del usuario (arriba a la derecha) y **Cerrar sesión**: debe volver al login y no permitir entrar al dashboard sin loguearse de nuevo.
+
+Si el login muestra *"No se pudo conectar con el servidor"*, verificar que [`/health`](https://ai-day-flock-2026-production.up.railway.app/health) responda `{"status":"ok"}`.
+
 ## Estructura del monorepo
 
 ```
@@ -106,7 +132,7 @@ Creá un proyecto en Railway desde este repo de GitHub, con tres servicios:
    DATABASE_URL=${{Postgres.DATABASE_URL}}
    JWT_SECRET=<secreto aleatorio de 32+ caracteres>
    JWT_EXPIRES_IN=8h
-   CORS_ORIGIN=https://<dominio-del-frontend>.up.railway.app
+   CORS_ORIGIN=https://frontend-vulnprio-production.up.railway.app
    SEED_ADMIN_USERNAME=admin
    SEED_ADMIN_PASSWORD=<contraseña segura>
    SEED_ADMIN_DISPLAY_NAME=Administrador
@@ -114,7 +140,7 @@ Creá un proyecto en Railway desde este repo de GitHub, con tres servicios:
    En *Settings → Networking*, generá un dominio público.
 3. **frontend:** *New → GitHub Repo*. En *Root Directory* poné `/frontend`. Variable:
    ```
-   API_URL=https://<dominio-del-backend>.up.railway.app
+   API_URL=https://ai-day-flock-2026-production.up.railway.app
    ```
    Generá también su dominio público y copialo en `CORS_ORIGIN` del backend.
 
