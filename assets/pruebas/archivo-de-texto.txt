@@ -1,0 +1,5 @@
+Este es un archivo de texto plano para probar la validación de formato.
+No es una planilla de Excel: la app debería rechazarlo por extensión y tipo de archivo.
+
+ID;Título;Severidad;Activo
+VULN-001;Log4Shell;Crítica;api-pagos-prod
